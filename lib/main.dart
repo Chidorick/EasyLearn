@@ -44,6 +44,7 @@ class _RoadmapState extends State<Roadmap> {
                         children: [
                           Text(
                             students[index],
+
                           ),
                           FixedTimeline.tileBuilder(
                             theme: TimelineThemeData(
