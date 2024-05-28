@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:timelines/timelines.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'dart:math';
+import 'package:provider/provider.dart';
+import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static final _databaseName = "RoadmapDatabase.db";
@@ -42,6 +42,13 @@ class DatabaseHelper {
             FOREIGN KEY (studentId) REFERENCES students (id)
           )
           ''');
+    await db.execute('''
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL,
+          password TEXT NOT NULL
+        )
+        ''');
   }
 }
 
@@ -155,7 +162,8 @@ class _RoadmapState extends State<Roadmap> {
 
   void _loadData() async {
     final db = await DatabaseHelper.instance.database;
-    // Load students
+    final TextEditingController _usernameController = TextEditingController();
+    final TextEditingController _passwordController = TextEditingController();
     final studentMaps = await db.query('students');
     _students = studentMaps.map((map) => Student.fromMap(map)).toList();
     // Load lessons for each student
@@ -382,12 +390,104 @@ class _RoadmapState extends State<Roadmap> {
     return Container(color: Colors.blue, height: 5.0, width: 50.0);
   }
 
+  Future<void> _showLoginDialog(BuildContext context) async {
+    final TextEditingController _usernameController = TextEditingController();
+    final TextEditingController _passwordController = TextEditingController();
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Login'),
+          content: Column(
+            children: <Widget>[
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(hintText: 'Username'),
+              ),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(hintText: 'Password'),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Login'),
+              onPressed: () async {
+                // Add your login logic here
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showRegisterDialog(BuildContext context) async {
+    final TextEditingController _usernameController = TextEditingController();
+    final TextEditingController _passwordController = TextEditingController();
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Register'),
+          content: Column(
+            children: <Widget>[
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(hintText: 'Username'),
+              ),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(hintText: 'Password'),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Register'),
+              onPressed: () async {
+                // Add your registration logic here
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: Text('Students Roadmap'),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.login),
+              onPressed: () => _showLoginDialog(context),
+            ),
+            IconButton(
+              icon: Icon(Icons.app_registration),
+              onPressed: () => _showRegisterDialog(context),
+            ),
+          ],
         ),
         body: Column(
           children: [
