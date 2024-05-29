@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter/foundation.dart';
 
 class DatabaseHelper {
   static final _databaseName = "RoadmapDatabase.db";
@@ -24,32 +22,34 @@ class DatabaseHelper {
         version: _databaseVersion, onCreate: _onCreate);
   }
 
-  Future _onCreate(Database db, int version) async {
-    await db.execute('''
-          CREATE TABLE students (
-            id INTEGER PRIMARY KEY,
-            name TEXT NOT NULL
-          )
-          ''');
-    await db.execute('''
-          CREATE TABLE lessons (
-            id INTEGER PRIMARY KEY,
-            studentId INTEGER,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            completionStatus BOOLEAN NOT NULL,
-            date TEXT NOT NULL,
-            FOREIGN KEY (studentId) REFERENCES students (id)
-          )
-          ''');
-    await db.execute('''
-        CREATE TABLE users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT NOT NULL,
-          password TEXT NOT NULL
-        )
-        ''');
-  }
+Future _onCreate(Database db, int version) async {
+  await db.execute('''
+    CREATE TABLE students (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL
+            group TEXTs
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE lessons (
+      id INTEGER PRIMARY KEY,
+      studentId INTEGER,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      completionStatus BOOLEAN NOT NULL,
+      date TEXT NOT NULL,
+      FOREIGN KEY (studentId) REFERENCES students (id)
+    )
+  ''');
+  await db.execute('''
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL,
+      password TEXT NOT NULL,
+      email TEXT NOT NULL
+    )
+  ''');
+}
 }
 
 class Student {
@@ -58,7 +58,7 @@ class Student {
 
   Student({required this.id, required this.name});
 
-  // Convert a Student object into a Map. The keys must correspond to the names of the columns in the database.
+  // Преобразовать объект Student в Map. Ключи должны соответствовать именам столбцов в базе данных.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -66,7 +66,7 @@ class Student {
     };
   }
 
-  // Convert a Map into a Student object
+  // Преобразовать Map в объект Student
   static Student fromMap(Map<String, dynamic> map) {
     return Student(
       id: map['id'],
@@ -92,7 +92,7 @@ class Lesson {
     required this.date,
   });
 
-  // Convert a Lesson object into a Map. The keys must correspond to the names of the columns in the database.
+  // Преобразовать объект Lesson в Map. Ключи должны соответствовать именам столбцов в базе данных.
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -145,39 +145,13 @@ class Roadmap extends StatefulWidget {
 
 class _RoadmapState extends State<Roadmap> {
   List<Student> _students = [];
-  Map<String, List<Lesson>> _lessons = {};
   Map<String, List<bool>> lessonCompletionStatus = {};
+  bool _isCalendarVisible = false;
   Map<String, List<String>> lessons = {};
   Map<String, List<String>> lessonDescriptions = {};
   Map<String, List<DateTime>> lessonDates = {};
   DateTime _selectedDay = DateTime.now();
   DateTime? _lessonDay;
-
-  @override
-  void initState() {
-    super.initState();
-    _lessonDay = _selectedDay;
-    _loadData();
-  }
-
-  void _loadData() async {
-    final db = await DatabaseHelper.instance.database;
-    final TextEditingController _usernameController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
-    final studentMaps = await db.query('students');
-    _students = studentMaps.map((map) => Student.fromMap(map)).toList();
-    // Load lessons for each student
-    for (var student in _students) {
-      final lessonMaps = await db.query(
-        'lessons',
-        where: 'studentId = ?',
-        whereArgs: [student.id],
-      );
-      _lessons[student.name] =
-          lessonMaps.map((map) => Lesson.fromMap(map)).toList();
-    }
-    setState(() {});
-  }
 
   void _addNewStudent(BuildContext context) {
     TextEditingController _textController = TextEditingController();
@@ -185,34 +159,34 @@ class _RoadmapState extends State<Roadmap> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add New Student'),
+          title: Text('Добавить нового студента'),
           content: TextField(
             controller: _textController,
-            decoration: InputDecoration(hintText: "Enter student's name"),
+            decoration: InputDecoration(hintText: "Введите имя студента"),
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('Отмена'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
-              child: Text('Add'),
+              child: Text('Добавить'),
               onPressed: () async {
-                int id = 0; // Generate this id as per your logic
+                int id = 0; // Сгенерируйте этот идентификатор в соответствии с вашей логикой
                 String name = _textController.text;
-                // Create a Student object
+                // Создать объект Student
                 Student newStudent = Student(id: id, name: name);
-                // Get a reference to the database
+                // Получить ссылку на базу данных
                 final Database db = await DatabaseHelper.instance.database;
-                // Insert the Student into the correct table
+                // Вставить Student в правильную таблицу
                 await db.insert(
                   'students',
                   newStudent.toMap(),
                   conflictAlgorithm: ConflictAlgorithm.replace,
                 );
-                // Update the list of students and refresh the UI
+                // Обновить список студентов и обновить UI
                 setState(() {
                   _students.add(newStudent);
                 });
@@ -235,21 +209,21 @@ class _RoadmapState extends State<Roadmap> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Edit Lesson'),
+          title: Text('Редактировать урок'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _textController,
-                decoration: InputDecoration(hintText: "Enter new lesson info"),
+                decoration: InputDecoration(hintText: "Введите новую информацию об уроке"),
               ),
               TextField(
                 controller: _descriptionController,
                 decoration:
-                    InputDecoration(hintText: "Enter short description"),
+                    InputDecoration(hintText: "Введите краткое описание"),
               ),
               ElevatedButton(
-                child: Text("Select Date"),
+                child: Text("Выбрать дату"),
                 onPressed: () async {
                   final DateTime? picked = await showDatePicker(
                     context: context,
@@ -268,14 +242,14 @@ class _RoadmapState extends State<Roadmap> {
           ),
           actions: <Widget>[
             TextButton(
-              child: Text('Cancel'),
+              child: Text('Отмена'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             if (lessonCompletionStatus[student]![lessonIndex])
               TextButton(
-                child: Text('Uncomplete'),
+                child: Text('Не завершено'),
                 onPressed: () {
                   setState(() {
                     lessonCompletionStatus[student]![lessonIndex] = false;
@@ -285,7 +259,7 @@ class _RoadmapState extends State<Roadmap> {
               )
             else
               TextButton(
-                child: Text('Complete'),
+                child: Text('Завершено'),
                 onPressed: () {
                   setState(() {
                     lessonCompletionStatus[student]![lessonIndex] = true;
@@ -294,14 +268,14 @@ class _RoadmapState extends State<Roadmap> {
                 },
               ),
             TextButton(
-              child: Text('Save'),
+              child: Text('Сохранить'),
               onPressed: () {
                 setState(() {
                   lessons[student]![lessonIndex] = _textController.text;
                   lessonDescriptions[student]![lessonIndex] =
                       _descriptionController.text;
                   lessonDates[student]![lessonIndex] = _lessonDate;
-                  _selectedDay = _lessonDate; // Update the selected day
+                  _selectedDay = _lessonDate; // Обновить выбранный день
                 });
                 Navigator.of(context).pop();
               },
@@ -320,20 +294,20 @@ class _RoadmapState extends State<Roadmap> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Add New Lesson'),
+          title: Text('Новый урок'),
           content: Column(
             children: [
               TextField(
                 controller: _textController,
-                decoration: InputDecoration(hintText: "Enter new lesson info"),
+                decoration: InputDecoration(hintText: "Введите новую информацию об уроке"),
               ),
               TextField(
                 controller: _descriptionController,
                 decoration:
-                    InputDecoration(hintText: "Enter short description"),
+                    InputDecoration(hintText: "Введите краткое описание"),
               ),
               ElevatedButton(
-                child: Text("Select Date"),
+                child: Text("Выбрать дату"),
                 onPressed: () async {
                   final DateTime? picked = await showDatePicker(
                     context: context,
@@ -431,53 +405,62 @@ class _RoadmapState extends State<Roadmap> {
     );
   }
 
-  Future<void> _showRegisterDialog(BuildContext context) async {
-    final TextEditingController _usernameController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Register'),
-          content: Column(
-            children: <Widget>[
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(hintText: 'Username'),
-              ),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(hintText: 'Password'),
-                obscureText: true,
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+Future<void> _showRegisterDialog(BuildContext context) async {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  String? _selectedGroup;
+  List<String> _groups = ['Group A', 'Group B', 'Group C']; // Пример групп
+
+  return showDialog<void>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Register'),
+        content: Column(
+          children: <Widget>[
+            TextField(
+              controller: _usernameController,
+              decoration: InputDecoration(hintText: 'Username'),
             ),
-            TextButton(
-              child: Text('Register'),
-              onPressed: () async {
-                // Add your registration logic here
-                Navigator.of(context).pop();
-              },
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(hintText: 'Password'),
+              obscureText: true,
             ),
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(hintText: 'Email'),
+            ), 
           ],
-        );
-      },
-    );
-  }
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Register'),
+            onPressed: () async {
+              // Добавьте здесь логику регистрации
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Students Roadmap'),
+          title: Text('EasyLearn'),
           actions: <Widget>[
             IconButton(
               icon: Icon(Icons.login),
@@ -493,7 +476,7 @@ class _RoadmapState extends State<Roadmap> {
           children: [
             Expanded(
               child: ListView.builder(
-                itemCount: _students.length, // Use _students here
+                itemCount: _students.length,
                 itemBuilder: (context, index) {
                   String studentName = _students[index].name;
                   if (!lessons.containsKey(studentName)) {
@@ -543,47 +526,70 @@ class _RoadmapState extends State<Roadmap> {
                 },
               ),
             ),
-            TableCalendar(
-              firstDay: DateTime.utc(2010, 10, 16),
-              lastDay: DateTime.utc(2030, 3, 14),
-              focusedDay: _selectedDay,
-              selectedDayPredicate: (day) {
-                return isSameDay(_selectedDay, day);
-              },
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                });
-              },
-              calendarBuilders: CalendarBuilders(
-                selectedBuilder: (context, date, _) {
-                  if (_lessonDay != null && isSameDay(_lessonDay, date)) {
-                    return Container(
-                      margin: const EdgeInsets.all(4.0),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        date.day.toString(),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    );
-                  } else {
-                    return null;
-                  }
+            Visibility(
+              visible: _isCalendarVisible,
+              child: TableCalendar(
+                firstDay: DateTime.utc(2010, 10, 16),
+                lastDay: DateTime.utc(2030, 3, 14),
+                focusedDay: _selectedDay,
+                selectedDayPredicate: (day) {
+                  return isSameDay(_selectedDay, day);
                 },
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                  });
+                },
+                calendarBuilders: CalendarBuilders(
+                  selectedBuilder: (context, date, _) {
+                    if (_lessonDay != null && isSameDay(_lessonDay, date)) {
+                      return Container(
+                        margin: const EdgeInsets.all(4.0),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          date.day.toString(),
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      );
+                    } else {
+                      return null;
+                    }
+                  },
+                ),
               ),
-            ),
+            )
           ],
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _addNewStudent(context);
-          },
-          child: Icon(Icons.add),
-          backgroundColor: Colors.blue,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+          shape: CircularNotchedRectangle(),
+          notchMargin: 6.0, // Add a margin for the notch
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment
+                .spaceAround, // This will space out the items evenly
+            children: <Widget>[
+              IconButton(
+                  icon: Icon(Icons.calendar_today),
+                  onPressed: () {
+                    setState(() {
+                      _isCalendarVisible = !_isCalendarVisible;
+                    });
+                  }),
+
+              // Spacer to center the FloatingActionButton
+              SizedBox(width: 48),
+              IconButton(
+                icon: Icon(Icons.add),
+                onPressed: () {
+                  _addNewStudent(context);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
