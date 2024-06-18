@@ -22,15 +22,14 @@ class DatabaseHelper {
         version: _databaseVersion, onCreate: _onCreate);
   }
 
-Future _onCreate(Database db, int version) async {
-  await db.execute('''
+  Future _onCreate(Database db, int version) async {
+    await db.execute('''
     CREATE TABLE students (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL
-            group TEXTs
     )
   ''');
-  await db.execute('''
+    await db.execute('''
     CREATE TABLE lessons (
       id INTEGER PRIMARY KEY,
       studentId INTEGER,
@@ -41,7 +40,7 @@ Future _onCreate(Database db, int version) async {
       FOREIGN KEY (studentId) REFERENCES students (id)
     )
   ''');
-  await db.execute('''
+    await db.execute('''
     CREATE TABLE users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL,
@@ -49,7 +48,7 @@ Future _onCreate(Database db, int version) async {
       email TEXT NOT NULL
     )
   ''');
-}
+  }
 }
 
 class Student {
@@ -76,12 +75,12 @@ class Student {
 }
 
 class Lesson {
-  final int id;
-  final int studentId;
-  final String title;
-  final String description;
-  final bool completionStatus;
-  final DateTime date;
+  int id;
+  int studentId; // Removed the 'final' keyword
+  String title;
+  String description;
+  bool completionStatus;
+  DateTime date;
 
   Lesson({
     required this.id,
@@ -152,17 +151,216 @@ class _RoadmapState extends State<Roadmap> {
   Map<String, List<DateTime>> lessonDates = {};
   DateTime _selectedDay = DateTime.now();
   DateTime? _lessonDay;
+  bool _isDateWithLesson(DateTime date) {
+
+  return lessonDates.values.any((lessonList) => 
+    lessonList.any((lessonDate) => isSameDay(lessonDate, date))
+  );
+}
 
   void _addNewStudent(BuildContext context) {
     TextEditingController _textController = TextEditingController();
+    String? _selectedExam =
+        'ЕГЭ по математике'; // Initial value for the dropdown
+    List<String> _exams = ['ЕГЭ по математике', '-'];
+
+    // Define a list of default lessons for the roadmap
+    List<Lesson> defaultLessons = [
+      Lesson(
+        id: 1, // Generate this ID according to your logic
+        studentId: 0, // This will be updated when the student is created
+        title: 'Основы ',
+        description: 'Введение в ЕГЭ по математике',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 1)), // Schedule for tomorrow
+      ),
+      Lesson(
+        id: 2,
+        studentId: 0,
+        title: 'Линейные уравнения',
+        description: 'Решение линейных уравнений и их систем',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 2)),
+      ),
+      Lesson(
+        id: 3,
+        studentId: 0,
+        title: 'Логарифмы',
+        description: 'Изучение логарифмических функций и их применений',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 20)),
+      ),
+      Lesson(
+        id: 4,
+        studentId: 0,
+        title: 'Векторы',
+        description: 'Основы векторной алгебры и их применения',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 4)),
+      ),
+      Lesson(
+        id: 5,
+        studentId: 0,
+        title: 'Комплексные числа',
+        description: 'Введение в комплексные числа и их свойства',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 5)),
+      ),
+      Lesson(
+        id: 6,
+        studentId: 0,
+        title: 'Теорема Пифагора',
+        description: 'Изучение теоремы Пифагора и её применений',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 6)),
+      ),
+      Lesson(
+        id: 7,
+        studentId: 0,
+        title: 'Прогрессии',
+        description: 'Арифметические и геометрические прогрессии',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 7)),
+      ),
+      Lesson(
+        id: 8,
+        studentId: 0,
+        title: 'Геометрия',
+        description: 'Изучение основных геометрических фигур и теорем',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 8)),
+      ),
+      Lesson(
+        id: 9,
+        studentId: 0,
+        title: 'Тригонометрические функции',
+        description:
+            'Изучение синуса, косинуса и других тригонометрических функций',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 9)),
+      ),
+      Lesson(
+        id: 10,
+        studentId: 0,
+        title: 'Площади фигур',
+        description:
+            'Изучение методов нахождения площадей геометрических фигур',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 10)),
+      ),
+      Lesson(
+        id: 11,
+        studentId: 0,
+        title: 'Объемы тел',
+        description: 'Расчет объемов пространственных геометрических тел',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 11)),
+      ),
+      Lesson(
+        id: 12,
+        studentId: 0,
+        title: 'Неравенства',
+        description: 'Решение различных типов неравенств',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 12)),
+      ),
+      Lesson(
+        id: 13,
+        studentId: 0,
+        title: 'Планиметрия',
+        description: 'Изучение свойств плоских фигур',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 13)),
+      ),
+      Lesson(
+        id: 14,
+        studentId: 0,
+        title: 'Стереометрия',
+        description: 'Изучение свойств пространственных фигур',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 14)),
+      ),
+      Lesson(
+        id: 15,
+        studentId: 0,
+        title: 'Теория чисел',
+        description: 'Основы теории чисел и делители',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 15)),
+      ),
+      Lesson(
+        id: 16,
+        studentId: 0,
+        title: 'Математическая статистика',
+        description:
+            'Изучение методов математической статистики и их применения',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 16)),
+      ),
+      Lesson(
+        id: 17,
+        studentId: 0,
+        title: 'Дифференциальные уравнения',
+        description: 'Основы дифференциальных уравнений и методы их решения',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 17)),
+      ),
+      Lesson(
+        id: 18,
+        studentId: 0,
+        title: 'Геометрическая оптика',
+        description:
+            'Понимание принципов геометрической оптики и их математическое описание',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 18)),
+      ),
+      Lesson(
+        id: 19,
+        studentId: 0,
+        title: 'Элементы топологии',
+        description:
+            'Введение в элементы топологии и их математическое применение',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 19)),
+      ),
+      Lesson(
+        id: 20,
+        studentId: 0,
+        title: 'Математическое моделирование',
+        description:
+            'Знакомство с основами математического моделирования и его использование в различных задачах',
+        completionStatus: false,
+        date: DateTime.now().add(Duration(days: 20)),
+      ),
+    ];
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Добавить нового студента'),
-          content: TextField(
-            controller: _textController,
-            decoration: InputDecoration(hintText: "Введите имя студента"),
+          content: Column(
+            children: [
+              TextField(
+                controller: _textController,
+                decoration: InputDecoration(hintText: "Введите имя студента"),
+                
+              ),
+              DropdownButton<String>(
+                value: _selectedExam,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedExam = newValue;
+                  });
+                },
+                items: _exams.map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
           actions: <Widget>[
             TextButton(
@@ -174,22 +372,47 @@ class _RoadmapState extends State<Roadmap> {
             TextButton(
               child: Text('Добавить'),
               onPressed: () async {
-                int id = 0; // Сгенерируйте этот идентификатор в соответствии с вашей логикой
+                int id = 0; // Generate this ID according to your logic
                 String name = _textController.text;
-                // Создать объект Student
+
+                // Create a Student object
                 Student newStudent = Student(id: id, name: name);
-                // Получить ссылку на базу данных
+
+                // Get a reference to the database
                 final Database db = await DatabaseHelper.instance.database;
-                // Вставить Student в правильную таблицу
+
+                // Insert the Student into the correct table
                 await db.insert(
                   'students',
                   newStudent.toMap(),
                   conflictAlgorithm: ConflictAlgorithm.replace,
                 );
-                // Обновить список студентов и обновить UI
+
+                // Update the studentId for each default lesson
+                for (var lesson in defaultLessons) {
+                  lesson.studentId = id; // Update with the new student's ID
+                  await db.insert(
+                    'lessons',
+                    lesson.toMap(),
+                    conflictAlgorithm: ConflictAlgorithm.replace,
+                  );
+                }
+
+                // Update the list of students and refresh the UI
                 setState(() {
                   _students.add(newStudent);
+                  lessons[newStudent.name] =
+                      defaultLessons.map((lesson) => lesson.title).toList();
+                  lessonDescriptions[newStudent.name] = defaultLessons
+                      .map((lesson) => lesson.description)
+                      .toList();
+                  lessonCompletionStatus[newStudent.name] = defaultLessons
+                      .map((lesson) => lesson.completionStatus)
+                      .toList();
+                  lessonDates[newStudent.name] =
+                      defaultLessons.map((lesson) => lesson.date).toList();
                 });
+
                 Navigator.of(context).pop();
               },
             ),
@@ -200,22 +423,25 @@ class _RoadmapState extends State<Roadmap> {
   }
 
   void _showEditDialog(BuildContext context, String student, int lessonIndex) {
-    TextEditingController _textController =
-        TextEditingController(text: lessons[student]![lessonIndex]);
-    TextEditingController _descriptionController =
-        TextEditingController(text: lessonDescriptions[student]![lessonIndex]);
-    DateTime _lessonDate = lessonDates[student]![lessonIndex];
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Редактировать урок'),
-          content: Column(
+  TextEditingController _textController =
+      TextEditingController(text: lessons[student]![lessonIndex]);
+  TextEditingController _descriptionController =
+      TextEditingController(text: lessonDescriptions[student]![lessonIndex]);
+  DateTime _lessonDate = lessonDates[student]![lessonIndex];
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Редактировать урок'),
+        content: SingleChildScrollView( // Обернуть в SingleChildScrollView
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: _textController,
-                decoration: InputDecoration(hintText: "Введите новую информацию об уроке"),
+                decoration: InputDecoration(
+                    hintText: "Введите новую информацию об уроке"),
               ),
               TextField(
                 controller: _descriptionController,
@@ -234,57 +460,61 @@ class _RoadmapState extends State<Roadmap> {
                   if (picked != null && picked != _lessonDate) {
                     setState(() {
                       _lessonDay = picked;
+                      _lessonDate = picked; // Update the lesson date
+                      lessonDates[student]![lessonIndex] = picked;
                     });
                   }
                 },
-              ),
+              )
             ],
           ),
-          actions: <Widget>[
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Отмена'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          if (lessonCompletionStatus[student]![lessonIndex])
             TextButton(
-              child: Text('Отмена'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            if (lessonCompletionStatus[student]![lessonIndex])
-              TextButton(
-                child: Text('Не завершено'),
-                onPressed: () {
-                  setState(() {
-                    lessonCompletionStatus[student]![lessonIndex] = false;
-                  });
-                  Navigator.of(context).pop();
-                },
-              )
-            else
-              TextButton(
-                child: Text('Завершено'),
-                onPressed: () {
-                  setState(() {
-                    lessonCompletionStatus[student]![lessonIndex] = true;
-                  });
-                  Navigator.of(context).pop();
-                },
-              ),
-            TextButton(
-              child: Text('Сохранить'),
+              child: Text('Не завершено'),
               onPressed: () {
                 setState(() {
-                  lessons[student]![lessonIndex] = _textController.text;
-                  lessonDescriptions[student]![lessonIndex] =
-                      _descriptionController.text;
-                  lessonDates[student]![lessonIndex] = _lessonDate;
-                  _selectedDay = _lessonDate; // Обновить выбранный день
+                  lessonCompletionStatus[student]![lessonIndex] = false;
+                });
+                Navigator.of(context).pop();
+              },
+            )
+          else
+            TextButton(
+              child: Text('Завершено'),
+              onPressed: () {
+                setState(() {
+                  lessonCompletionStatus[student]![lessonIndex] = true;
                 });
                 Navigator.of(context).pop();
               },
             ),
-          ],
-        );
-      },
-    );
-  }
+          TextButton(
+            child: Text('Сохранить'),
+            onPressed: () {
+              setState(() {
+                lessons[student]![lessonIndex] = _textController.text;
+                lessonDescriptions[student]![lessonIndex] =
+                    _descriptionController.text;
+                // Make sure to update the lessonDates map with the new date
+                lessonDates[student]![lessonIndex] = _lessonDate;
+                _selectedDay = _lessonDate; // Обновить выбранный день
+              });
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
 
   void _addNewLesson(BuildContext context, String student) {
     TextEditingController _textController = TextEditingController();
@@ -299,7 +529,8 @@ class _RoadmapState extends State<Roadmap> {
             children: [
               TextField(
                 controller: _textController,
-                decoration: InputDecoration(hintText: "Введите новую информацию об уроке"),
+                decoration: InputDecoration(
+                    hintText: "Введите новую информацию об уроке"),
               ),
               TextField(
                 controller: _descriptionController,
@@ -405,46 +636,112 @@ class _RoadmapState extends State<Roadmap> {
     );
   }
 
-Future<void> _showRegisterDialog(BuildContext context) async {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  String? _selectedGroup;
-  List<String> _groups = ['Group A', 'Group B', 'Group C']; // Пример групп
+  Future<void> _showRegisterDialog(BuildContext context) async {
+    final TextEditingController _usernameController = TextEditingController();
+    final TextEditingController _passwordController = TextEditingController();
+    final TextEditingController _emailController = TextEditingController();
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Register'),
+          content: Column(
+            children: <Widget>[
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(hintText: 'Username'),
+              ),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(hintText: 'Password'),
+                obscureText: true,
+              ),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(hintText: 'Email'),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Register'),
+              onPressed: () async {
+                // Добавьте здесь логику регистрации
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  return showDialog<void>(
+void _showDayStatus(BuildContext context, DateTime selectedDay) {
+  // Find all lessons that occur on the selected day.
+  final lessonsOnSelectedDay = lessonDates.entries
+      .where((entry) => entry.value.any((lessonDate) => isSameDay(lessonDate, selectedDay)))
+      .map((entry) => entry.key)
+      .toList();
+
+  // Find all students who have lessons on the selected day.
+  final studentNamesOnSelectedDay = _students
+      .where((student) => lessonsOnSelectedDay.contains(student.name))
+      .map((student) => student.name)
+      .toList();
+
+  // Show the dialog with the status of the day.
+  showDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text('Register'),
-        content: Column(
-          children: <Widget>[
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(hintText: 'Username'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(hintText: 'Password'),
-              obscureText: true,
-            ),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(hintText: 'Email'),
-            ), 
-          ],
+        title: Text('Статус дня'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: studentNamesOnSelectedDay.isNotEmpty
+                ? studentNamesOnSelectedDay.map((name) {
+                    // Find the index of the lesson for the selected day.
+                    int lessonIndex = lessonDates[name]!.indexWhere((lessonDate) =>
+                        isSameDay(lessonDate, selectedDay));
+                    // Return a widget for each student with a lesson on this day.
+                    return InkWell(
+                      onTap: () {
+                        // If a lesson is found, show the edit dialog.
+                        if (lessonIndex != -1) {
+                          _showEditDialog(context, name, lessonIndex);
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        margin: EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(name),
+                            Text('Занято'),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList()
+                : [Text('День свободен')], // Display this if no lessons are found.
+          ),
         ),
         actions: <Widget>[
           TextButton(
-            child: Text('Cancel'),
+            child: Text('OK'),
             onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text('Register'),
-            onPressed: () async {
-              // Добавьте здесь логику регистрации
               Navigator.of(context).pop();
             },
           ),
@@ -453,7 +750,6 @@ Future<void> _showRegisterDialog(BuildContext context) async {
     },
   );
 }
-
 
   @override
   Widget build(BuildContext context) {
@@ -472,10 +768,14 @@ Future<void> _showRegisterDialog(BuildContext context) async {
             ),
           ],
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              ListView.builder(
+                shrinkWrap:
+                    true, // Установка shrinkWrap в true для ListView внутри SingleChildScrollView
+                physics:
+                    NeverScrollableScrollPhysics(), // Отключение прокрутки внутри ListView
                 itemCount: _students.length,
                 itemBuilder: (context, index) {
                   String studentName = _students[index].name;
@@ -493,24 +793,29 @@ Future<void> _showRegisterDialog(BuildContext context) async {
                         children: [
                           Text(studentName),
                           Expanded(
-                            child: Row(
-                              children: List.generate(
-                                  lessons[studentName]!.length * 2, (i) {
-                                if (i.isEven) {
-                                  return GestureDetector(
-                                    onTap: () {
-                                      _showEditDialog(
-                                          context, studentName, i ~/ 2);
-                                    },
-                                    child: tick(lessonCompletionStatus[
-                                        studentName]![i ~/ 2]),
-                                  );
-                                } else {
-                                  return Row(
-                                    children: [spacer(), line(), spacer()],
-                                  );
-                                }
-                              }),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: List.generate(
+                                  lessons[studentName]!.length * 2,
+                                  (i) {
+                                    if (i.isEven) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          _showEditDialog(
+                                              context, studentName, i ~/ 2);
+                                        },
+                                        child: tick(lessonCompletionStatus[
+                                            studentName]![i ~/ 2]),
+                                      );
+                                    } else {
+                                      return Row(
+                                        children: [spacer(), line(), spacer()],
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                           IconButton(
@@ -525,62 +830,93 @@ Future<void> _showRegisterDialog(BuildContext context) async {
                   );
                 },
               ),
-            ),
-            Visibility(
-              visible: _isCalendarVisible,
-              child: TableCalendar(
-                firstDay: DateTime.utc(2010, 10, 16),
-                lastDay: DateTime.utc(2030, 3, 14),
-                focusedDay: _selectedDay,
-                selectedDayPredicate: (day) {
-                  return isSameDay(_selectedDay, day);
-                },
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                  });
-                },
-                calendarBuilders: CalendarBuilders(
-                  selectedBuilder: (context, date, _) {
-                    if (_lessonDay != null && isSameDay(_lessonDay, date)) {
-                      return Container(
-                        margin: const EdgeInsets.all(4.0),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          date.day.toString(),
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      );
-                    } else {
-                      return null;
-                    }
-                  },
-                ),
-              ),
-            )
-          ],
+              Visibility(
+                  visible: _isCalendarVisible,
+                  child: TableCalendar(
+                    firstDay: DateTime.utc(2010, 10, 16),
+                    lastDay: DateTime.utc(2030, 3, 14),
+                    focusedDay: _selectedDay,
+                    selectedDayPredicate: (day) {
+                      return isSameDay(_selectedDay, day);
+                    },
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                      });
+                      _showDayStatus(context, selectedDay);
+                    },
+                    calendarBuilders: CalendarBuilders(
+  selectedBuilder: (context, date, _) {
+    if (_lessonDay != null && isSameDay(_lessonDay, date)) {
+      return Container(
+        margin: const EdgeInsets.all(4.0),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondary,
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          date.day.toString(),
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    } else {
+      return null;
+    }
+  },
+  todayBuilder: (context, date, _) {
+    if (isSameDay(_selectedDay, date)) {
+      return Container(
+        margin: const EdgeInsets.all(4.0),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondary,
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          date.day.toString(),
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    } else {
+      return null;
+    }
+  },
+  markerBuilder: (context, date, events) {
+    if (_isDateWithLesson(date)) {
+      return Positioned(
+        right: 1,
+        bottom: 1,
+        child: Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.red,
+          ),
+          width: 7,
+          height: 7,
+        ),
+      );
+    }
+  },
+ ))
+          )],
+          ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: BottomAppBar(
           shape: CircularNotchedRectangle(),
-          notchMargin: 6.0, // Add a margin for the notch
+          notchMargin: 6.0,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment
-                .spaceAround, // This will space out the items evenly
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: <Widget>[
               IconButton(
-                  icon: Icon(Icons.calendar_today),
-                  onPressed: () {
-                    setState(() {
-                      _isCalendarVisible = !_isCalendarVisible;
-                    });
-                  }),
-
-              // Spacer to center the FloatingActionButton
+                icon: Icon(Icons.calendar_today),
+                onPressed: () {
+                  setState(() {
+                    _isCalendarVisible = !_isCalendarVisible;
+                  });
+                },
+              ),
               SizedBox(width: 48),
               IconButton(
                 icon: Icon(Icons.add),
